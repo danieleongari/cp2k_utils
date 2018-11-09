@@ -20,8 +20,6 @@ ft_types=('BLYP',
           'PBESOL',
           'OLYP')
 
-
-
 tabgrid1=10
 tabgrid2=10
 
@@ -48,8 +46,15 @@ for an in range(1, len(atomic_symbol)):
           file = open('GTH_POTENTIALS', "r")
           countline=0
           for line in file:
-                if (re.search(" "+at+" ",line) or re.search("^"+at+" ",line)) \
-                and re.search("GTH-"+ft+"-q"+str(q)+" ",line):
+                if (                                                        \
+                    re.search(" "+at+" ",line) or                           \
+                    re.search("^"+at+" ",line)                              \
+                   )                                                        \
+                   and                                                      \
+                   (                                                        \
+                    re.search("GTH-"+ft+"-q"+str(q)+" ", line) or           \
+                    re.search("GTH-"+ft+"-q"+str(q)+"\n",line)              \
+                   ):
                     foundat=True
                     foundatq=True
                     foundft=True
