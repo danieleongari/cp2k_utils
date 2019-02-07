@@ -1,55 +1,79 @@
 def print_header():
-    print('#step energy dispersion pressure cell_vol cell_a cell_b cell_c cell_alp cell_bet cell_gam max_step rms_step max_grad rms_grad')
+    print('#step energy(Ha) dispersion(Ha) pressure(bar) cell_vol(A^3) '+\
+          'cell_a(A) cell_b(A) cell_c(A) cell_alp(deg) cell_bet(deg) cell_gam(deg) '+\
+          'max_dr(bohr) rms_dr(bohr) max_grad(Ha/bohr) rms_grad(Ha/bohr)')
 
 def print_steps(cp2kfile):
-    num_lines = sum(1 for line in open(cp2kfile))
-    
+    BOHR2ANG = 0.529177208590000
     file = open(cp2kfile, 'r')
     runtype='still_unknown'
     step=0
+    energy = None
     pressure=0.0
     max_step=0.0
     rms_step=0.0
     max_grad=0.0
     rms_grad=0.0
-    
-    for i in range(num_lines):
+
+    while True:
       print_now=False
-      line=file.readline().split()
-      if len(line)==4 and line[0]=='GLOBAL|' and line[1]=='Run' and line[2]=='type':  runtype=line[3]
-    
-      if len(line)>0 and line[0]=='CELL|':
-         if len(line)==4  and line[1]=='Volume':    cell_vol=float(line[3])
-         if len(line)==10 and line[2]=='a':         cell_a=float(line[9])
-         if len(line)==10 and line[2]=='b':         cell_b=float(line[9])
-         if len(line)==10 and line[2]=='c':         cell_c=float(line[9])
-         if len(line)==6  and line[3]=='alpha':     cell_alp=float(line[5])
-         if len(line)==6  and line[3]=='beta':      cell_bet=float(line[5])
-         if len(line)==6  and line[3]=='gamma':     cell_gam=float(line[5])
-    
-      if len(line)==3 and line[0]=='Dispersion'   and line[1]=='energy:':        		            dispersion=float(line[2])
-      if len(line)==9 and line[0]=='ENERGY|'      and line[1]=='Total':        		                energy=float(line[8])
-    
+      line=file.readline()
+      data= line.split()
+      # General info
+      if len(data)==4 and data[0]=='GLOBAL|' and data[1]=='Run' and data[2]=='type':  runtype=data[3]
+      if runtype=='MD' and len(data)==4 and data[1]=='Ensemble':
+          if  data[3]=='NVT':
+              runtype='MD-NVT'
+          elif data[3]=='NPT_F':
+              runtype='MD-NPT_F'
+      if len(data)>0 and data[0]=='CELL|':
+         if len(data)==4  and data[1]=='Volume':    cell_vol=float(data[3])
+         if len(data)==10 and data[2]=='a':         cell_a=float(data[9])
+         if len(data)==10 and data[2]=='b':         cell_b=float(data[9])
+         if len(data)==10 and data[2]=='c':         cell_c=float(data[9])
+         if len(data)==6  and data[3]=='alpha':     cell_alp=float(data[5])
+         if len(data)==6  and data[3]=='beta':      cell_bet=float(data[5])
+         if len(data)==6  and data[3]=='gamma':     cell_gam=float(data[5])
+      if len(data)==3 and data[0]=='Dispersion'   and data[1]=='energy:':        		            dispersion=float(data[2])
+      if len(data)==9 and data[0]=='ENERGY|'      and data[1]=='Total':        		                energy=float(data[8])
+      # Specific info
       if runtype=='ENERGY':
-          if i==(num_lines-1):                                                                          print_now=True
-    
-      if runtype=='GEO_OPT' or runtype=='CELL_OPT':
-          if len(line)==7 and line[1]=='Informations' and line[3]=='step':   		                    step=int(line[5])
-          if len(line)==5 and line[0]=='Max.'         and line[1]=='step'      and line[2]=='size':     max_step=float(line[4])
-          if len(line)==5 and line[0]=='RMS'          and line[1]=='step'      and line[2]=='size': 	rms_step=float(line[4])
-          if len(line)==4 and line[0]=='Max.'         and line[1]=='gradient':  			            max_grad=float(line[3])
-          if len(line)==4 and line[0]=='RMS'          and line[1]=='gradient':  			            rms_grad=float(line[3])
-          if len(line)==1 and line[0]=='---------------------------------------------------':           print_now=True
-    
+          if len(line)==0: print_now=True
+      if runtype in ['GEO_OPT','CELL_OPT']:
+          if len(data)==7 and data[1]=='Informations' and data[3]=='step':   		                    step=int(data[5])
+          if len(data)==5 and data[0]=='Max.'         and data[1]=='step'      and data[2]=='size':     max_step=float(data[4])
+          if len(data)==5 and data[0]=='RMS'          and data[1]=='step'      and data[2]=='size': 	rms_step=float(data[4])
+          if len(data)==4 and data[0]=='Max.'         and data[1]=='gradient':  			            max_grad=float(data[3])
+          if len(data)==4 and data[0]=='RMS'          and data[1]=='gradient':  			            rms_grad=float(data[3])
+          if len(data)==1 and data[0]=='---------------------------------------------------':           print_now=True
       if runtype=='CELL_OPT':
-          if len(line)==5 and line[0]=='Internal'     and line[1]=='Pressure':   		                pressure=float(line[4])
-    
-      if runtype=='MD':
-          if len(line)==4 and line[0]=='STEP'        and line[1]=='NUMBER':   		                    step=int(line[3])
-          if len(line)==4 and line[0]=='INITIAL'     and line[1]=='PRESSURE[bar]':                      pressure=float(line[3]); print_now=True
-          if len(line)==5 and line[0]=='PRESSURE'    and line[1]=='[bar]':                              pressure=float(line[3]); print_now=True
-    
-      if print_now: print('%d %.4f %.4f %.1f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.4f %.4f %.4f %.4f' \
-                        %(step,energy,dispersion,pressure,\
-                          cell_vol,cell_a,cell_b,cell_c,cell_alp,cell_bet,cell_gam,
-                          max_step,rms_step,max_grad,rms_grad))
+          if len(data)==5 and data[0]=='Internal'     and data[1]=='Pressure':   	pressure=float(data[4])
+      if runtype =='MD-NVT':
+          if len(data)==4 and data[0]=='STEP'        and data[1]=='NUMBER':   		step=int(data[3])
+          if len(data)==4 and data[0]=='INITIAL'     and data[1]=='PRESSURE[bar]':  pressure=float(data[3]); print_now=True
+          if len(data)==5 and data[0]=='PRESSURE'    and data[1]=='[bar]':          pressure=float(data[3]); print_now=True
+      if runtype=='MD-NPT_F':
+          if len(data)==4 and data[0]=='STEP'        and data[1]=='NUMBER':   		step=int(data[3])
+          if len(data)==4 and data[0]=='INITIAL'     and data[1]=='PRESSURE[bar]':  pressure=float(data[3]); print_now=True
+          if len(data)==5 and data[0]=='PRESSURE'    and data[1]=='[bar]':          pressure=float(data[3]);
+          if len(data)==4 and data[0]=='VOLUME[bohr^3]':                            cell_vol=float(data[3])*(BOHR2ANG**3)
+          if len(data)==6 and data[1]=='LNTHS[bohr]':
+                                                                                    cell_a=float(data[3])*BOHR2ANG
+                                                                                    cell_b=float(data[4])*BOHR2ANG
+                                                                                    cell_c=float(data[5])*BOHR2ANG
+          if len(data)==6 and data[1]=='ANGLS[deg]':
+                                                                                    cell_alp=float(data[3])
+                                                                                    cell_bet=float(data[4])
+                                                                                    cell_gam=float(data[5])
+                                                                                    print_now=True
+      # Print step, print warning if the end of the file came but no ener
+      if print_now and energy != None:
+          print('%d %.4f %.4f %.1f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.4f %.4f %.4f %.4f' \
+              %(step,energy,dispersion,pressure,\
+                cell_vol,cell_a,cell_b,cell_c,cell_alp,cell_bet,cell_gam,
+                max_step,rms_step,max_grad,rms_grad))
+      if len(line)==0:
+          if energy==None:
+              print(" *** WARNING: CALCULATION CRASHED before the first step *** ")
+          break
+    file.close()
