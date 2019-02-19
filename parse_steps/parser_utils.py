@@ -46,6 +46,7 @@ def print_steps(cp2kfile):
           if len(data)==4 and data[0]=='Max.'         and data[1]=='gradient':  			            max_grad=float(data[3])
           if len(data)==4 and data[0]=='RMS'          and data[1]=='gradient':  			            rms_grad=float(data[3])
           if len(data)==1 and data[0]=='---------------------------------------------------':           print_now=True
+          #Note: with CELL_OPT/LBFGS there is no "STEP 0", while there is with CELL_OPT/BFGS
       if runtype=='CELL_OPT':
           if len(data)==5 and data[0]=='Internal'     and data[1]=='Pressure':   	pressure=float(data[4])
       if runtype =='MD-NVT':
