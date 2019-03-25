@@ -1,12 +1,14 @@
 def print_header():
-    print('#step energy(Ha) dispersion(Ha) pressure(bar) cell_vol(A^3) '+\
+    print('#step energy(eV/atom) energy(Ha) dispersion(Ha) pressure(bar) cell_vol(A^3) '+\
           'cell_a(A) cell_b(A) cell_c(A) cell_alp(deg) cell_bet(deg) cell_gam(deg) '+\
           'max_dr(bohr) rms_dr(bohr) max_grad(Ha/bohr) rms_grad(Ha/bohr)')
 
 def print_steps(cp2kfile):
     BOHR2ANG = 0.529177208590000
+    HA2EV = 27.211
     file = open(cp2kfile, 'r')
     runtype='still_unknown'
+    natoms=0
     step=0
     energy = None
     pressure=0.0
@@ -20,12 +22,14 @@ def print_steps(cp2kfile):
       line=file.readline()
       data= line.split()
       # General info
-      if len(data)==4 and data[0]=='GLOBAL|' and data[1]=='Run' and data[2]=='type':  runtype=data[3]
+      if len(data)==4 and data[0]=='GLOBAL|' and data[1]=='Run' and data[2]=='type': runtype=data[3]
+      if len(data)==3 and data[0]=='-' and data[1]=='Atoms:': natoms=int(data[2])
       if runtype=='MD' and len(data)==4 and data[1]=='Ensemble':
           if  data[3]=='NVT':
               runtype='MD-NVT'
           elif data[3]=='NPT_F':
               runtype='MD-NPT_F'
+
       if len(data)>0 and data[0]=='CELL|':
          if len(data)==4  and data[1]=='Volume':    cell_vol=float(data[3])
          if len(data)==10 and data[2]=='a':         cell_a=float(data[9])
@@ -69,8 +73,8 @@ def print_steps(cp2kfile):
                                                                                     print_now=True
       # Print step, print warning if the end of the file came but no ener
       if print_now and energy != None:
-          print('%d %.4f %.4f %.1f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.4f %.4f %.4f %.4f' \
-              %(step,energy,dispersion,pressure,\
+          print('%d %.4f %.4f %.4f %.1f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.4f %.4f %.4f %.4f' \
+              %(step,energy*HA2EV/natoms,energy,dispersion,pressure,\
                 cell_vol,cell_a,cell_b,cell_c,cell_alp,cell_bet,cell_gam,
                 max_step,rms_step,max_grad,rms_grad))
       if len(line)==0:
