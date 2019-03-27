@@ -1,5 +1,5 @@
 def print_header():
-    print('#step energy(eV/atom) energy(Ha) dispersion(Ha) pressure(bar) cell_vol(A^3) '+\
+    print('#step energy(Ha) energy(eV/atom) dispersion(eV/atom) pressure(bar) cell_vol(A^3) '+\
           'cell_a(A) cell_b(A) cell_c(A) cell_alp(deg) cell_bet(deg) cell_gam(deg) '+\
           'max_dr(bohr) rms_dr(bohr) max_grad(Ha/bohr) rms_grad(Ha/bohr)')
 
@@ -11,6 +11,7 @@ def print_steps(cp2kfile):
     natoms=0
     step=0
     energy = None
+    dispersion=0.0 #Needed if no dispersions are included
     pressure=0.0
     max_step=0.0
     rms_step=0.0
@@ -73,8 +74,8 @@ def print_steps(cp2kfile):
                                                                                     print_now=True
       # Print step, print warning if the end of the file came but no ener
       if print_now and energy != None:
-          print('%d %.4f %.4f %.4f %.1f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.4f %.4f %.4f %.4f' \
-              %(step,energy*HA2EV/natoms,energy,dispersion,pressure,\
+          print('%d %.5f %.5f %.5f %.1f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.4f %.4f %.4f %.4f' \
+              %(step,energy,energy*HA2EV/natoms,dispersion*HA2EV/natoms,pressure,
                 cell_vol,cell_a,cell_b,cell_c,cell_alp,cell_bet,cell_gam,
                 max_step,rms_step,max_grad,rms_grad))
       if len(line)==0:
