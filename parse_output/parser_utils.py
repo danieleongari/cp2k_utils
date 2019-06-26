@@ -87,6 +87,23 @@ def print_steps(cp2koutfile):
 def parse_bandgap(cp2koutfile):
     '''Given a cp2k.out file where the band gap is compute, returns alpha and beta bandgap.
     This is parsed when the &MO_CUBES is activated with one NLUMO.
+    Use this input:
+
+    &DFT
+      &PRINT
+        &MO_CUBES ON
+            ADD_LAST  SYMBOLIC
+            &EACH
+               CELL_OPT  0
+               GEO_OPT  0
+               MD  0
+            &END EACH
+            NHOMO  1
+            NLUMO  1
+            WRITE_CUBE  F
+         &END MO_CUBES
+
+
     (Note that &MO prints one energy per line and also the occupation but does not work with OT)
     Note: orbitals with occupation > 0.000 are considered as occupied!
     '''
